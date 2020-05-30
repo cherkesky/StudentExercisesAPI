@@ -38,7 +38,7 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, Name, Language FROM Exercise";
+                    cmd.CommandText = "SELECT Id, Exercise_Name, Exercise_Language FROM Exercise";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Exercise> Exercises = new List<Exercise>();
 
