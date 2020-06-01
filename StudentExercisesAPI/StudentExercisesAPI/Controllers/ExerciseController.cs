@@ -47,8 +47,8 @@ namespace StudentExercisesAPI.Controllers
                         Exercise exercise = new Exercise
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Exercise_Name")),
-                            Language = reader.GetString(reader.GetOrdinal("Exercise_Language"))
+                            Exercise_Name = reader.GetString(reader.GetOrdinal("Exercise_Name")),
+                            Exercise_Language = reader.GetString(reader.GetOrdinal("Exercise_Language"))
                         };
 
                         Exercises.Add(exercise);
@@ -83,13 +83,74 @@ namespace StudentExercisesAPI.Controllers
                         excercise = new Exercise
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Exercise_Name")),
-                            Language = reader.GetString(reader.GetOrdinal("Exercise_Language"))
+                            Exercise_Name = reader.GetString(reader.GetOrdinal("Exercise_Name")),
+                            Exercise_Language = reader.GetString(reader.GetOrdinal("Exercise_Language"))
                         };
                     }
                     reader.Close();
 
                     return Ok(excercise);
+                }
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] Exercise exercise)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO Exercise (Exercise_Name, Exercise_Language)
+                                        OUTPUT INSERTED.Id
+                                        VALUES (@name, @language)";
+                    cmd.Parameters.Add(new SqlParameter("@name", exercise.Exercise_Name));
+                    cmd.Parameters.Add(new SqlParameter("@language", exercise.Exercise_Language));
+
+                    int newId = (int)cmd.ExecuteScalar();
+                    exercise.Id = newId;
+                    return CreatedAtRoute("GetExercise", new { id = newId }, exercise);
+                }
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] Exercise exercise)
+        {
+            try
+            {
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"UPDATE Exercise
+                                            SET Exercise_Name = @Exercise_Name,
+                                                Exercise_Language = @Exercise_Language
+                                            WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@Exercise_Name", exercise.Exercise_Name));
+                        cmd.Parameters.Add(new SqlParameter("@Exercise_Language", exercise.Exercise_Language));
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        if (rowsAffected > 0)
+                        {
+                            return new StatusCodeResult(StatusCodes.Status204NoContent);
+                        }
+                        throw new Exception("No rows affected");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                if (!ExerciseExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
                 }
             }
         }
@@ -104,6 +165,23 @@ namespace StudentExercisesAPI.Controllers
 
 
 
+        private bool ExerciseExists(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT Id, Exercise_Name, Exercise_Language
+                        FROM Exercise
+                        WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
 
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    return reader.Read();
+                }
+            }
+        }
     }
 }
