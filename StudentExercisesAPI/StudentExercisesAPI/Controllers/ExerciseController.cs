@@ -96,6 +96,7 @@ namespace StudentExercisesAPI.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Exercise exercise)
+
         {
             using (SqlConnection conn = Connection)
             {
@@ -104,9 +105,9 @@ namespace StudentExercisesAPI.Controllers
                 {
                     cmd.CommandText = @"INSERT INTO Exercise (Exercise_Name, Exercise_Language)
                                         OUTPUT INSERTED.Id
-                                        VALUES (@name, @language)";
-                    cmd.Parameters.Add(new SqlParameter("@name", exercise.Exercise_Name));
-                    cmd.Parameters.Add(new SqlParameter("@language", exercise.Exercise_Language));
+                                        VALUES (@Exercise_Name, @Exercise_Language)";
+                    cmd.Parameters.Add(new SqlParameter("@Exercise_Name", exercise.Exercise_Name));
+                    cmd.Parameters.Add(new SqlParameter("@Exercise_Language", exercise.Exercise_Language));
 
                     int newId = (int)cmd.ExecuteScalar();
                     exercise.Id = newId;
