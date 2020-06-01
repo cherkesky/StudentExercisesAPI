@@ -60,7 +60,39 @@ namespace StudentExercisesAPI.Controllers
             }
         }
 
+        [HttpGet("{id}", Name = "GetExercise")]
+        public async Task<IActionResult> Get([FromRoute] int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT
+                            Id, Exercise_Name, Exercise_Language
+                        FROM Exercise
+                        WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
 
+                    Exercise excercise = null;
+
+                    if (reader.Read())
+                    {
+                        excercise = new Exercise
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Exercise_Name")),
+                            Language = reader.GetString(reader.GetOrdinal("Exercise_Language"))
+                        };
+                    }
+                    reader.Close();
+
+                    return Ok(excercise);
+                }
+            }
+        }
 
 
 
